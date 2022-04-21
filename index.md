@@ -1,3 +1,7 @@
+---
+layout: default
+---
+
 ## Clang-Built Linux Meet-up
 
 10-11 Sep, 2022<br/>
