@@ -4,8 +4,13 @@ layout: default
 
 ## Clang-Built Linux Meet-up
 
-10-11 Sep, 2022<br/>
-Dublin, Ireland
+10-11 Sep, 2022
+
+<a href="https://goo.gl/maps/32yVACGEiFS1goeR9">Google Building GRCQ1</a><br/>
+1 Grand Canal Quay,<br/>
+Dublin, D02 FF61, Ireland
+
+IE-DUB-GRCQ1-2-Birr Castle
 
 ### Overview
 
@@ -19,4 +24,4 @@ Create an [Issue](https://github.com/ClangBuiltLinux/cbl-meetup/issues). Please 
  - Abstract,
  - A brief description for the website,
  - The people who will give the presentation, and
- - An estimate of how long the presentation will be. 
+ - An estimate of how long the presentation will be.
