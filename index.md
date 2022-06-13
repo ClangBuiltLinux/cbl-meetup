@@ -16,6 +16,10 @@ IE-DUB-GRCQ1-2-Birr Castle
 
 The Clang-Built Linux Meet-up is a chance for developers to meet and discuss building Linux with Clang.
 
+### Attend
+
+Please fill out [this form](https://forms.gle/iCkYRyUqi2Bd26YN9) to register.
+
 ### Call For Presentations
 
 Create an [Issue](https://github.com/ClangBuiltLinux/cbl-meetup/issues). Please include:
