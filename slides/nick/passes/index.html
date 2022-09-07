@@ -1,0 +1,674 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>LLVM Passes</title>
+
+    <link rel="stylesheet" href="dist/reset.css">
+    <link rel="stylesheet" href="dist/reveal.css">
+    <link rel="stylesheet" href="dist/theme/black.css">
+
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="plugin/highlight/monokai.css">
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1>LLVM Passes</h1>
+          <h3>Nick Desaulniers - Sept 10/11 22</h3>
+        </section>
+        <section>
+          <h3><a href="https://www.clear.rice.edu/comp512/Lectures/Papers/1971-allen-catalog.pdf">
+              A Catalogue of Optimizing Transformations - Allen, Cook &apos;71
+          </a></h3>
+          <ul>
+            <li class="fragment">Inlining</li>
+            <li class="fragment">Loop Unrolling / Fusion / Unswitching</li>
+            <li class="fragment">Common Subexpression Elimination (CSE)</li>
+            <li class="fragment">Code Motion (CM)</li>
+            <li class="fragment">Constant folding + propagation</li>
+            <li class="fragment">Dead Code Elimination (DCE)</li>
+            <li class="fragment">Strength Reduction</li>
+            <li class="fragment">Instruction Scheduling</li>
+            <li class="fragment">Register Allocation</li>
+            <li class="fragment">Peephole Optimization</li>
+          </ul>
+        </section>
+        <section>
+          <h3>LLVM Passes</h3>
+          <ul>
+            <li class="fragment">
+              Passes come in <span style="color: red;">Module</span>,
+              <span style="color: green;">Function</span>, or
+              <span style="color: blue;">Loop</span> variants.
+            </li>
+            <li class="fragment">
+              <code>-mllvm -debug-pass=Structure</code> can tell you which pass
+              operates on which level.
+            </li>
+            <li class="fragment"><a href="https://llvm.org/docs/Passes.html">
+                Analysis passes and transform passes.
+            </a></li>
+            <ul class="fragment"><li>
+                Analyses like dominance can be expensive to compute; reuse if nothing changes.
+            </li></ul>
+            <li class="fragment">Passes are grouped into Pipelines.</li>
+            <li class="fragment">Passes can run on LLVM IR, SDAG, or MIR.</li>
+          </ul>
+        </section>
+        <section>
+          <h3>Clang Pass Pipeline</h3>
+          <ul>
+            <li class="fragment">-O2 (c51a12d598e9) (aarch64-linux-gnu)</li>
+            <li class="fragment">
+              Prefer <code style="color: green;">-print-before-all</code> to
+              <code style="color: red;">-print-after-all</code>.
+              <code style="color: red;">-print-after-all</code> doesn't print
+              anything if the pass made no changes.
+            </li>
+          </ul>
+        </section>
+        <section>
+<pre><code data-trim data-noescape class="language-plaintext">
+$ clang -mllvm -print-before-all --target=aarch64-linux-gnu \
+  -O2 -c /tmp/x.c 2>&1 | grep Dump
+...
+*** IR Dump Before CoroEarlyPass on [module] ***
+*** IR Dump Before LowerExpectIntrinsicPass on foo ***
+*** IR Dump Before SimplifyCFGPass on foo ***
+*** IR Dump Before SROAPass on foo ***
+*** IR Dump Before EarlyCSEPass on foo ***
+...
+$ !! | wc -l
+205
+$ clang ... | grep Dump | sort -u | wc -l
+168
+</code></pre>
+          <p>These slides are non-exhaustive.</p>
+        </section>
+        <section>
+          <h3><a href="https://llvm.org/docs/Passes.html#simplifycfg-simplify-the-cfg">
+              Simplify the Control Flow Graph (CFG)
+          </a></h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+  goto foo;
+foo:
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+// poof!
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3><a href="https://llvm.org/docs/Passes.html#sroa-scalar-replacement-of-aggregates">
+              Scalar Replacement of Aggregates (SROA)
+          </a></h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+struct foo my_foo {
+  int x, y;
+} = {
+  .x = 42,
+  .y = 10
+};
+return my_foo.x;
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+int x = 42;
+int y = 10;
+return x;
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3> Common Subexpression Elimination</h3>
+          <p>Tries to match literally identical subexpressions.</p>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+int a = b * c + d;
+int e = b * c * e;
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+int bc = b * c;
+int a = bc + d;
+int e = bc * e;
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3><a href="https://llvm.org/docs/Passes.html#ipsccp-interprocedural-sparse-conditional-constant-propagation">
+              Interprocedural Sparse Conditional Constant Propagation (IPSCCP)
+          </a></h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+static int foo(int x) {
+  return x;
+}
+void bar (void) { foo(42); }
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+static int foo(int x) {
+  return 42;
+}
+void bar (void) { foo(42); }
+</code></pre>
+          </div>
+          <div style="text-align: left; float: left; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+static int baz(void) {
+  return 42;
+}
+int quux (void) {
+  return baz();
+}
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+static int baz(void) {
+  return 42;
+}
+int quux (void) {
+  return 42;
+}
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3><a href="https://llvm.org/docs/Passes.html#deadargelim-dead-argument-elimination">
+              Dead Argument Elimination
+          </a></h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+int foo(int x) {
+  return 42;
+}
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+int foo(void) {
+  return 42;
+}
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3><a href="https://llvm.org/docs/Passes.html#instcombine-combine-redundant-instructions">
+              Combine redundant instructions aka instcombine
+          </a></h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+int x = y + 0;
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+int x = y;
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3><a href="https://llvm.org/docs/Passes.html#inline-function-integration-inlining">
+              Function Inliner
+          </a></h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+void foo (int);
+void bar (void) {
+  int x = 42;
+  foo(x);
+}
+void baz (void) {
+  bar();
+}
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+void foo (int);
+void bar (void) {
+  int x = 42;
+  foo(x);
+}
+void baz (void) {
+  {
+    int x = 42;
+    foo(x);
+  }
+}
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3><a href="https://llvm.org/docs/Passes.html#jump-threading-jump-threading">
+              Jump Threading
+          </a></h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+if (x)
+  y = 42;
+
+if (y < 0)
+  foo();
+else
+  bar();
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+if (x) {
+  y = 42;
+  bar();
+  goto end;
+}
+
+if (y < 0)
+  foo();
+else
+  bar();
+
+end:;
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3><a href="https://llvm.org/docs/Passes.html#tailcallelim-tail-call-elimination">
+              Tail Call Elimination
+          </a></h3>
+          <div>
+<pre><code data-trim data-noescape class="language-c">
+void foo (void);
+void baz (void) {
+    foo();
+}
+</code></pre>
+          </div>
+          <div style="text-align: left; float: left; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-armasm">
+.globl baz
+.type baz,@function
+foo:
+  bl foo
+  ret
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-armasm">
+.globl baz
+.type baz,@function
+foo:
+  b foo
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3><a href="https://llvm.org/docs/Passes.html#loop-simplify-canonicalize-natural-loops">
+              Canonicalize natural loops (Loop Simplify)
+          </a></h3>
+          <p>Ensure that loops are in a canonical form
+          (&quot;<a href="https://llvm.org/docs/LoopTerminology.html#loop-terminology-loop-simplify">Loop Simplify Form</a>&quot;)</p>
+          <ul>
+            <li class="fragment">
+              To put something in canonical form means to reduce all possible
+              representaitions to one, to simply checks optimizations need to
+              do.
+            </li>
+            <li class="fragment">Single non-critical entry edge from outside to header.</li>
+            <li class="fragment">Exit blocks dominated by loop header.</li>
+            <li class="fragment">Loops have 1 backedge.</li>
+          </ul>
+        </section>
+        <section>
+          <h3>Loop Simplify example</h3>
+          <p>Loops have 1 backedge.</li>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+for (...) {
+  if (x)
+    continue;
+  if (y)
+    continue;
+  ...
+}
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+for (...) {
+  if (x)
+    goto end;
+  if (y)
+    goto end;
+  ...
+  end:;
+}
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3>MergedLoadStoreMotionPass</h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+if (...) {
+  int x = *y;
+  x = foo(x);
+  *y = x;
+} else {
+  int z = *y;
+  z = bar(z);
+  *y = z;
+}
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+int xz = *y;
+if (...)
+  xz = foo(xz);
+else
+  xz = bar(xz);
+*y = xz;
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3><a href="https://llvm.org/docs/Passes.html#gvn-global-value-numbering">
+              Global Value Numbering (GVN)
+          </a></h3>
+          <p>
+            Unlike CSE, tries to compute equivalency of subexpressions.
+            Requires SSA form.
+          </p>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+int w = 3;
+int x = 3;
+int y = x + 4;
+int z = w + 4;
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+int w = 3;
+int x = w;
+int y = w + 4;
+int z = y;
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3><a href="https://llvm.org/docs/Passes.html#dce-dead-code-elimination">
+            Dead Code Elimination (DCE)
+          </a></h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+goto foo;
+expensive();
+foo:;
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+goto foo;
+foo:;
+</code></pre>
+          </div>
+          <p style="clear: both;" class="fragment">
+            LLVM has Agressive, Bit-tracking, and Global DCE variants.
+          </p>
+        </section>
+        <section>
+          <h3>Correlated Value Propagation</h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+if (x)
+  foo(x ? b : c);
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+if (x)
+  foo(b);
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3><a href="https://llvm.org/docs/Passes.html#memcpyopt-memcpy-optimization">
+              memcpy optimization
+          </a></h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+struct foo { ... } a, b;
+memcpy(&a, &b, sizeof a);
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+a = b;
+</code></pre>
+          </div>
+          <div style="clear: both; text-align: left; float: left; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+a[0] = 0;
+a[1] = 0;
+a[2] = 0;
+a[3] = 0;
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+memset(a, 0, 4 * sizeof a[0]);
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3><a href="https://llvm.org/docs/Passes.html#dse-dead-store-elimination">
+            Dead Store Elimination (DSE)
+          </a></h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+foo(x);
+if (0)
+  x = 42;
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+foo(x);
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3><a href="https://llvm.org/docs/Passes.html#globalopt-global-variable-optimizer">
+            Global Variable Optimizer (globalopt)
+          </a></h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+int x = 4 + 5;
+
+// only written to
+static int y;
+
+static int z;
+int foo (void) {
+  z = bar();
+  return z;
+}
+
+// No callers
+void baz(void) {}
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+int x = 9;
+
+// poof! y
+
+void foo (void) {
+  int z = bar();
+  return z;
+}
+
+// poof! baz
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3>EliminateAvailableExternallyPass</h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+__attribute__((gnu_inline))
+extern inline int foo(void) {
+    return 42;
+}
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+// After inlining
+// poof! foo
+</code></pre>
+          </div>
+          <div style="clear: both; text-align: left; float: left; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+// -Wextern-initializer
+extern int y = 42;
+int x (void) {
+    return y + 1;
+}
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+int y;
+int x (void) {
+    return y + 1;
+}
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3>Float 2 Int</h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+void foo(int x) {
+  if (x < 1.1f)
+    bar();
+}
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+void foo(int x) {
+  if (x < 1)
+    bar();
+}
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3>LowerConstantIntrinsicsPass</h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+__builtin_constant_p();
+__builtin_object_size( \
+    foo, type);
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+// 0 or 1;
+// -1, 0, or min/max size
+// of foo;
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3>LoopDistributePass</h3>
+          <p>Setup for loop vectorizor.</p>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+void foo (int *a) {
+  int i = 0;
+  // Assume 4x32b SIMD.
+  // Unaligned loads.
+  while (i != 5) {
+    ++a[i] = a[i];
+    ++i;
+  }
+}
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+void foo (int *a) {
+  int i = 0;
+  // Assume 4x32b SIMD.
+  // Unaligned loads.
+  while (i != 4) {
+    a[i] = a[i] + 1;
+    ++i;
+  }
+  ++a[5];
+}
+</code></pre>
+          </div>
+          <p style="clear: both;" class="fragment">
+            How might this code have to change if the target doesn't support
+            unaligned loads/stores and had a few more iterations?
+          </p>
+        </section>
+
+
+
+        <!--TODO: gotta mention mem2reg, libcall optimization -->
+        <!--TODO: Mention that passes are not commutative-->
+
+      </div>
+    </div>
+
+<!--https://github.com/highlightjs/highlight.js/blob/main/SUPPORTED_LANGUAGES.md-->
+<!--<pre><code data-trim data-noescape class="language-">
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+void foo(void);
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+void bar(void);
+</code></pre>
+          </div>
+</code></pre>-->
+
+    <script src="dist/reveal.js"></script>
+    <!--<script src="plugin/notes/notes.js"></script>-->
+    <!--<script src="plugin/markdown/markdown.js"></script>-->
+    <script src="plugin/highlight/highlight.js"></script>
+    <script>
+      // More info about initialization & config:
+      // - https://revealjs.com/initialization/
+      // - https://revealjs.com/config/
+      Reveal.initialize({
+        hash: true,
+
+        // Learn about plugins: https://revealjs.com/plugins/
+         plugins: [ RevealHighlight ]
+      });
+    </script>
+  </body>
+</html>
