@@ -603,26 +603,20 @@ __builtin_object_size( \
           <div style="text-align: left; float: left; width: 50%;">
 <pre><code data-trim data-noescape class="language-c">
 void foo (int *a) {
-  int i = 0;
   // Assume 4x32b SIMD.
   // Unaligned loads.
-  while (i != 5) {
-    ++a[i] = a[i];
-    ++i;
-  }
+  for (int i = 0; i != 5; ++i)
+    ++a[i];
 }
 </code></pre>
           </div>
           <div style="text-align: right; float: right; width: 50%;" class="fragment">
 <pre><code data-trim data-noescape class="language-c">
 void foo (int *a) {
-  int i = 0;
   // Assume 4x32b SIMD.
   // Unaligned loads.
-  while (i != 4) {
-    a[i] = a[i] + 1;
-    ++i;
-  }
+  for (int i = 0; i != 4; ++i)
+    ++a[i];
   ++a[5];
 }
 </code></pre>
@@ -632,11 +626,283 @@ void foo (int *a) {
             unaligned loads/stores and had a few more iterations?
           </p>
         </section>
+        <section>
+          <h3>Loop Vectorize</h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+void foo (int *a) {
+  for (int i = 0; i != 4; ++i)
+    ++a[i];
+}
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+#include &lt;arm_neon.h&gt;
+
+void foo (int32x4_t *a) {
+  *a += 1;
+}
+</code></pre>
+            <p><a href="https://github.com/llvm/llvm-project/issues/57628">TODO: fix increment/decrement on vectors</a></p>
+          </div>
+        </section>
+        <section>
+          <h3>LoopLoadEliminationPass</h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+for (int i = 0; i < 100; ++i)
+  a[i+1] = a[i] + b[i];
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+for (int i = 0, tmp = a[i];
+     i < 100; ++i) {
+  a[i + 1] = tmp = tmp + b[i];
+}
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3>SLPVectorizerPass</h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3>VectorCombinePass</h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3>DivRemPairsPass</h3>
+          <p>
+            Division and remainder can often times be computed together. Looks
+            for matching denominators and tries to move operations closer
+            together.
+          </p>
+        </section>
+        <section>
+          <h3>ConstantMergePass</h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+static const int x =
+  0xdeadbeef;
+static const int y =
+  0xdeadbeef;
+int foo (void) { return x; }
+int bar (void) { baz(y); }
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+static const int xy =
+  0xdeadbeef;
+int foo (void) { return xy; }
+int bar (void) { baz(xy); }
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3>Expand large div/rem</h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+__int128 div (__int128 a,
+              __int128 b) {
+  return a / b;
+}
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+__int128 div (__int128 a,
+              __int128 b) {
+  // super complicated loop
+}
+</code></pre>
+            <p>Target may be incapable of large div/rem.</p>
+          </div>
+        </section>
+        <section>
+          <h3>Expand Atomic instructions</h3>
+          <p>Target may need libcall for <code>_Atomic</code> operation.</p>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3>Merge contiguous icmps</h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+// int a [200];
+// int b [200];
+if (a[10] == b[20] &&
+    a[11] == b[21]
+    a[12] == b[22]
+    a[13] == b[23])
+  goto foo;
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+// int a [200];
+// int b [200];
+if (memcmp(a + 10, b + 20,
+    4 * sizeof(a[0])))
+  goto foo;
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3>Expand memcmp to loads+cmp</h3>
+          <p>Take advantage of target specifics.</p>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+// int a [200];
+// int b [200];
+if (memcmp(a + 10, b + 20,
+    4 * sizeof(a[0])))
+  goto foo;
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+// long a [100];
+// long b [100];
+if (a[10] == b[10])
+  goto foo;
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3>Constant Hoist</h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+if (x)
+  return 0xdeadbeefdeadbeaf;
+if (y)
+  return 0xdeadbeefdeadbeaf;
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+unsigned long z =
+  0xdeadbeefdeadbeaf;
+if (x)
+  return z;
+if (y)
+  return z;
+</code></pre>
+          </div>
+          <p style="clear: both;" class="fragment">
+            Some constants are too large to encode in one instruction. Reuse
+            (when possible) rather than rebuild repeatedly.
+          </p>
+        </section>
+        <section>
+          <h3>Type Promotion</h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+for (char i = 0; i &lt; 50; ++i)
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+for (int i = 0; i &lt; 50; ++i)
+</code></pre>
+          </div>
+          <p style="clear: both;" class="fragment">
+            We have to be careful to prove that operation would produce similar
+            results on both types. (Overflow could be a problem.) Instruction
+            selection will later do legalization, but this pass is better
+            suited for cyclic code (inter-block).
+          </p>
+        </section>
+        <section>
+          <h3>ISEL</h3>
+          <p>Requires (multiple) separate talks.</p>
+          <p class="fragment">ISEL does do many optimizations, too.</p>
+        </section>
+        <section>
+          <h3>Tail Duplication</h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+goto *(y ? &&x : &&y);
+x:
+  k = 5;
+  goto z;
+y:
+  k = 42;
+  goto z;
+z:
+  foo();
+w:
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+goto *(y ? &&x : &&y);
+x:
+  k = 5;
+  foo();
+  goto w;
+y:
+  k = 42;
+  foo();
+  goto w;
+z: // unreachable!
+  foo();
+w:
+</code></pre>
+          </div>
+        </section>
+        <section>
+          <h3>If Conversion</h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-c">
+goto *(y ? &&x : &&y);
+x:
+  k = 5;
+  foo();
+  goto w;
+y:
+  k = 42;
+  foo();
+  goto w;
+w:
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+x = v ? 5 : 42;
+foo();
+</code></pre>
+          </div>
+        </section>
+
 
 
 
         <!--TODO: gotta mention mem2reg, libcall optimization -->
         <!--TODO: Mention that passes are not commutative-->
+        <!--TODO: mention regalloc, two address instruction?, block-placement>
 
       </div>
     </div>
