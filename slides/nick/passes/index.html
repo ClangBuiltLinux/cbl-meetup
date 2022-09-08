@@ -42,6 +42,7 @@
           <ul>
             <li class="fragment">
               Passes come in <span style="color: red;">Module</span>,
+              <span style="color: #ffa908;">CGSCC</span>,
               <span style="color: green;">Function</span>, or
               <span style="color: blue;">Loop</span> variants.
             </li>
@@ -87,7 +88,12 @@ $ !! | wc -l
 $ clang ... | grep Dump | sort -u | wc -l
 168
 </code></pre>
-          <p>These slides are non-exhaustive.</p>
+        </section>
+        <section>
+          <h3>Caveat Emptor</h3>
+          <p class="fragment">These slides are non-exhaustive.</p>
+          <p class="fragment">Passes generally aren't commutative.</p>
+          <p class="fragment">The examples shown here are barely the tip of the iceberg.</p>
         </section>
         <section>
           <h3><a href="https://llvm.org/docs/Passes.html#simplifycfg-simplify-the-cfg">
@@ -290,7 +296,6 @@ end:;
           </a></h3>
           <div>
 <pre><code data-trim data-noescape class="language-c">
-void foo (void);
 void baz (void) {
     foo();
 }
@@ -323,7 +328,7 @@ foo:
           <ul>
             <li class="fragment">
               To put something in canonical form means to reduce all possible
-              representaitions to one, to simply checks optimizations need to
+              representations to one, to simplify checks optimizations need to
               do.
             </li>
             <li class="fragment">Single non-critical entry edge from outside to header.</li>
@@ -427,7 +432,7 @@ foo:;
 </code></pre>
           </div>
           <p style="clear: both;" class="fragment">
-            LLVM has Agressive, Bit-tracking, and Global DCE variants.
+            LLVM has Aggressive, Bit-tracking, and Global DCE variants.
           </p>
         </section>
         <section>
@@ -900,8 +905,7 @@ foo();
 
 
 
-        <!--TODO: gotta mention mem2reg, libcall optimization -->
-        <!--TODO: Mention that passes are not commutative-->
+        <!--TODO: gotta mention mem2reg, libcall optimization (instcombine) -->
         <!--TODO: mention regalloc, two address instruction?, block-placement>
 
       </div>
