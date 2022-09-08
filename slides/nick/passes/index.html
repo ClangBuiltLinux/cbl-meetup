@@ -44,7 +44,10 @@
               Passes come in <span style="color: red;">Module</span>,
               <span style="color: #ffa908;">CGSCC</span>,
               <span style="color: green;">Function</span>, or
-              <span style="color: blue;">Loop</span> variants.
+              <span style="color: lightblue;">Loop</span> variants.
+            </li>
+            <li class="fragment">
+              <a href="https://github.com/llvm-mirror/llvm/blob/master/lib/Passes/PassRegistry.def">llvm/lib/Passes/PassRegistry.def</a>
             </li>
             <li class="fragment">
               <code>-mllvm -debug-pass=Structure</code> can tell you which pass
@@ -54,10 +57,23 @@
                 Analysis passes and transform passes.
             </a></li>
             <ul class="fragment"><li>
-                Analyses like dominance can be expensive to compute; reuse if nothing changes.
+                Analyses like dominance or scaler evolution can be expensive to
+                compute; reuse if nothing changes.
             </li></ul>
             <li class="fragment">Passes are grouped into Pipelines.</li>
             <li class="fragment">Passes can run on LLVM IR, SDAG, or MIR.</li>
+          </ul>
+        </section>
+        <section>
+          <h3>PassBuilder</h3>
+          <p>
+            Check out these methods to get a sense of how optimization passes
+            are ordered.
+          </p>
+          <ul>
+            <li class="fragment"><code>PassBuilder::buildPerModuleDefaultPipeline</code></li>
+            <li class="fragment"><code>PassBuilder::buildModuleSimplificationPipeline</code></li>
+            <li class="fragment"><code>PassBuilder::buildModuleOptimizationPipeline</code></li>
           </ul>
         </section>
         <section>
@@ -133,6 +149,10 @@ int y = 10;
 return x;
 </code></pre>
           </div>
+          <p style="clear: both;" class="fragment">
+            SROA invokes <code>promoteMemoryToRegister</code>, ie. the core of
+            mem2reg.
+          </p>
         </section>
         <section>
           <h3> Common Subexpression Elimination</h3>
@@ -670,28 +690,8 @@ for (int i = 0, tmp = a[i];
 </code></pre>
           </div>
         </section>
-        <section>
-          <h3>SLPVectorizerPass</h3>
-          <div style="text-align: left; float: left; width: 50%;">
-<pre><code data-trim data-noescape class="language-c">
-</code></pre>
-          </div>
-          <div style="text-align: right; float: right; width: 50%;" class="fragment">
-<pre><code data-trim data-noescape class="language-c">
-</code></pre>
-          </div>
-        </section>
-        <section>
-          <h3>VectorCombinePass</h3>
-          <div style="text-align: left; float: left; width: 50%;">
-<pre><code data-trim data-noescape class="language-c">
-</code></pre>
-          </div>
-          <div style="text-align: right; float: right; width: 50%;" class="fragment">
-<pre><code data-trim data-noescape class="language-c">
-</code></pre>
-          </div>
-        </section>
+        <!--<section> <h3>SLPVectorizerPass</h3> </section>-->
+        <!--<section> <h3>VectorCombinePass</h3> </section>-->
         <section>
           <h3>DivRemPairsPass</h3>
           <p>
@@ -744,14 +744,14 @@ __int128 div (__int128 a,
         <section>
           <h3>Expand Atomic instructions</h3>
           <p>Target may need libcall for <code>_Atomic</code> operation.</p>
-          <div style="text-align: left; float: left; width: 50%;">
-<pre><code data-trim data-noescape class="language-c">
-</code></pre>
-          </div>
-          <div style="text-align: right; float: right; width: 50%;" class="fragment">
-<pre><code data-trim data-noescape class="language-c">
-</code></pre>
-          </div>
+          <!--<div style="text-align: left; float: left; width: 50%;">-->
+<!--<pre><code data-trim data-noescape class="language-c">-->
+<!--</code></pre>-->
+          <!--</div>-->
+          <!--<div style="text-align: right; float: right; width: 50%;" class="fragment">-->
+<!--<pre><code data-trim data-noescape class="language-c">-->
+<!--</code></pre>-->
+          <!--</div>-->
         </section>
         <section>
           <h3>Merge contiguous icmps</h3>
@@ -920,7 +920,7 @@ foo();
 
 
 
-        <!--TODO: gotta mention mem2reg, libcall optimization (instcombine) -->
+        <!--TODO: gotta mention libcall optimization (instcombine) -->
 
       </div>
     </div>
