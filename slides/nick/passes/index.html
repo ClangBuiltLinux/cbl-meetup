@@ -246,6 +246,16 @@ z = y + 1;
 z = x + 2;
 </code></pre>
           </div>
+          <div style="clear: both; text-align: left; float: left; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+if (strlen(x) != 0)
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-c">
+if (*x)
+</code></pre>
+          </div>
         </section>
         <section>
           <h3><a href="https://llvm.org/docs/Passes.html#inline-function-integration-inlining">
@@ -917,10 +927,6 @@ foo();
         <section> <h3>Post-RA Scheduling</h3> </section>
         <section> <h3>Block Placement</h3> </section>
 
-
-
-
-        <!--TODO: gotta mention libcall optimization (instcombine) -->
 
       </div>
     </div>
