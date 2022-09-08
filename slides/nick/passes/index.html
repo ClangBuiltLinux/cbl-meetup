@@ -217,12 +217,13 @@ int foo(void) {
           </a></h3>
           <div style="text-align: left; float: left; width: 50%;">
 <pre><code data-trim data-noescape class="language-c">
-int x = y + 0;
+y = x + 1;
+z = y + 1;
 </code></pre>
           </div>
           <div style="text-align: right; float: right; width: 50%;" class="fragment">
 <pre><code data-trim data-noescape class="language-c">
-int x = y;
+z = x + 2;
 </code></pre>
           </div>
         </section>
@@ -849,7 +850,7 @@ for (int i = 0; i &lt; 50; ++i)
           <h3>Tail Duplication</h3>
           <div style="text-align: left; float: left; width: 50%;">
 <pre><code data-trim data-noescape class="language-c">
-goto *(y ? &&x : &&y);
+goto *(v ? &&x : &&y);
 x:
   k = 5;
   goto z;
@@ -863,7 +864,7 @@ w:
           </div>
           <div style="text-align: right; float: right; width: 50%;" class="fragment">
 <pre><code data-trim data-noescape class="language-c">
-goto *(y ? &&x : &&y);
+goto *(v ? &&x : &&y);
 x:
   k = 5;
   foo();
@@ -877,12 +878,15 @@ z: // unreachable!
 w:
 </code></pre>
           </div>
+          <p style="clear: both;" class="fragment">
+            There's pre-RA ("early") and post-RA variants.
+          </p>
         </section>
         <section>
           <h3>If Conversion</h3>
           <div style="text-align: left; float: left; width: 50%;">
 <pre><code data-trim data-noescape class="language-c">
-goto *(y ? &&x : &&y);
+goto *(v ? &&x : &&y);
 x:
   k = 5;
   foo();
@@ -901,12 +905,22 @@ foo();
 </code></pre>
           </div>
         </section>
+        <section> <h3>Peephole</h3> </section>
+        <section> <h3>Pre-RA Scheduling</h3> </section>
+        <section>
+          <h3>Regalloc</h3>
+          <p class="fragment">Requires multiple separate talks.</p>
+          <p class="fragment">Depending on which register allocator is being used, may involve multiple passes.</p>
+        </section>
+        <section> <h3>Prolog Epilog Insertion (PEI)</h3> </section>
+        <section> <h3>Expand Psuedos</h3> </section>
+        <section> <h3>Post-RA Scheduling</h3> </section>
+        <section> <h3>Block Placement</h3> </section>
 
 
 
 
         <!--TODO: gotta mention mem2reg, libcall optimization (instcombine) -->
-        <!--TODO: mention regalloc, two address instruction?, block-placement>
 
       </div>
     </div>
