@@ -28,19 +28,19 @@ Please fill out [this form](https://forms.gle/iCkYRyUqi2Bd26YN9) to register.
   overflow:hidden;padding:10px 5px;word-break:normal;}
 .tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
   font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
-.tg .tg-l38z{background-color:#96fffb;text-align:center;vertical-align:middle}
+.tg .tg-l38z{border-color:inherit;background-color:#96fffb;text-align:center;vertical-align:middle}
 .tg .tg-rgo1{background-color:#ffce93;border-color:inherit;text-align:center;vertical-align:middle}
-.tg .tg-rgo3{background-color:#fffc9e;text-align:center;vertical-align:middle}
-.tg .tg-cmwg{background-color:#ffccc9;text-align:center;vertical-align:top}
-.tg .tg-hy4i{background-color:#9aff99;text-align:center;vertical-align:middle}
+.tg .tg-rgo3{border-color:inherit;background-color:#fffc9e;text-align:center;vertical-align:middle}
+.tg .tg-cmwg{border-color:inherit;background-color:#ffccc9;text-align:center;vertical-align:top}
+.tg .tg-hy4i{border-color:inherit;background-color:#9aff99;text-align:center;vertical-align:middle}
 .tg .tg-jq7l{background-color:#ecf4ff;border-color:inherit;text-align:center;vertical-align:middle}
 .tg .tg-zme7{background-color:#ffce93;border-color:inherit;text-align:center;vertical-align:top}
 .tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
-.tg .tg-hafo{background-color:#fffc9e;border-color:inherit;text-align:center;vertical-align:top}
-.tg .tg-rq3n{background-color:#ffffff;border-color:inherit;text-align:center;vertical-align:middle}
-.tg .tg-3xi5{background-color:#ffffff;border-color:inherit;text-align:center;vertical-align:top}
-.tg .tg-0lax{text-align:left;vertical-align:top}
-.tg .tg-2ceo{background-color:#ffccc9;text-align:center;vertical-align:middle}
+.tg .tg-hafo{border-color:inherit;background-color:#fffc9e;border-color:inherit;text-align:center;vertical-align:top}
+.tg .tg-rq3n{border-color:inherit;background-color:#ffffff;border-color:inherit;text-align:center;vertical-align:middle}
+.tg .tg-3xi5{border-color:inherit;background-color:#ffffff;border-color:inherit;text-align:center;vertical-align:top}
+.tg .tg-0lax{border-color:inherit;text-align:left;vertical-align:top}
+.tg .tg-2ceo{border-color:inherit;background-color:#ffccc9;text-align:center;vertical-align:middle}
 </style>
 <table class="tg">
 <thead>
