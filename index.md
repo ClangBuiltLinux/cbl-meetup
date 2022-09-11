@@ -72,7 +72,7 @@ Please fill out [this form](https://forms.gle/iCkYRyUqi2Bd26YN9) to register.
   <tr>
     <td class="tg-0lax">11:30AM</td>
     <td class="tg-rgo3" rowspan="4">Lunch</td>
-    <td class="tg-l38z" rowspan="2">Every LLVM Pass and (Interesting) LLVM Class (Part II)<br><a href="slides/nick/passes/">Slides</a><br>Nick Desaulniers</td>
+    <td class="tg-l38z" rowspan="2">A Random Sample of LLVM Passes<br><a href="slides/nick/passes/">Slides</a><br>Nick Desaulniers</td>
   </tr>
   <tr>
     <td class="tg-0lax">Noon</td>
