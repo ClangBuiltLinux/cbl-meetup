@@ -162,7 +162,7 @@ return x;
           </p>
         </section>
         <section>
-          <h3> Common Subexpression Elimination</h3>
+          <h3> Common Subexpression Elimination (CSE)</h3>
           <p>Tries to match literally identical subexpressions.</p>
           <div style="text-align: left; float: left; width: 50%;">
 <pre><code data-trim data-noescape class="language-c">
@@ -523,14 +523,21 @@ memset(a, 0, 4 * sizeof a[0]);
           </a></h3>
           <div style="text-align: left; float: left; width: 50%;">
 <pre><code data-trim data-noescape class="language-c">
-foo(x);
-if (0)
-  x = 42;
+{
+  int x = 42;
+  foo(x);
+  ...
+  x = 0;
+}
 </code></pre>
           </div>
           <div style="text-align: right; float: right; width: 50%;" class="fragment">
 <pre><code data-trim data-noescape class="language-c">
-foo(x);
+{
+  int x = 42;
+  foo(x);
+  ...
+}
 </code></pre>
           </div>
         </section>
@@ -707,8 +714,17 @@ for (int i = 0, tmp = a[i];
 </code></pre>
           </div>
         </section>
-        <!--<section> <h3>SLPVectorizerPass</h3> </section>-->
-        <!--<section> <h3>VectorCombinePass</h3> </section>-->
+        <section>
+          <p>Many more loop passes</p>
+          <ul>
+            <li class="fragment">Superword Level Parallelism (SLP) Vectorizer</li>
+            <li class="fragment">Vector Combine</li>
+            <li class="fragment">Unroll and Jam</li>
+            <li class="fragment">Fusion</li>
+            <li class="fragment">Unswitching</li>
+            <li class="fragment">Versioning</li>
+          </ul>
+        </section>
         <section>
           <h3>DivRemPairsPass</h3>
           <p>
@@ -922,7 +938,20 @@ foo();
 </code></pre>
           </div>
         </section>
-        <section> <h3>Peephole</h3> </section>
+        <section>
+          <h3>Peephole</h3>
+          <div style="text-align: left; float: left; width: 50%;">
+<pre><code data-trim data-noescape class="language-armasm">
+mov w0, #1
+add w1, w1, w0
+</code></pre>
+          </div>
+          <div style="text-align: right; float: right; width: 50%;" class="fragment">
+<pre><code data-trim data-noescape class="language-armasm">
+add w1, w1, #0
+</code></pre>
+          </div>
+        </section>
         <section> <h3>Pre-RA Scheduling</h3> </section>
         <section>
           <h3>Regalloc</h3>
@@ -933,7 +962,6 @@ foo();
         <section> <h3>Expand Psuedos</h3> </section>
         <section> <h3>Post-RA Scheduling</h3> </section>
         <section> <h3>Block Placement</h3> </section>
-
 
       </div>
     </div>
