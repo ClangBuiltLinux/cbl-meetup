@@ -63,7 +63,7 @@ Please fill out [this form](https://forms.gle/iCkYRyUqi2Bd26YN9) to register.
   </tr>
   <tr>
     <td class="tg-0pky">10:30AM</td>
-    <td class="tg-rgo1" rowspan="2">Clang-Built Linux Status Update<br>Nathan Chancelor</td>
+    <td class="tg-rgo1" rowspan="2">Clang-Built Linux Status Update ([slides](slides/nathan_cbl_meetup_2022_slides.pdf)<br>Nathan Chancelor</td>
   </tr>
   <tr>
     <td class="tg-0pky">11:00AM</td>
