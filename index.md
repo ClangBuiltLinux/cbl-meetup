@@ -63,7 +63,7 @@ Please fill out [this form](https://forms.gle/iCkYRyUqi2Bd26YN9) to register.
   </tr>
   <tr>
     <td class="tg-0pky">10:30AM</td>
-    <td class="tg-rgo1" rowspan="2">Clang-Built Linux Status Update (<a href="slides/nathan/nathan_cbl_meetup_2022_slides.pdf">Slides</a>)<br>Nathan Chancelor</td>
+    <td class="tg-rgo1" rowspan="2">Clang-Built Linux Status Update<br><a href="slides/nathan/nathan_cbl_meetup_2022_slides.pdf">Slides</a><br>Nathan Chancelor</td>
   </tr>
   <tr>
     <td class="tg-0pky">11:00AM</td>
@@ -103,7 +103,7 @@ Please fill out [this form](https://forms.gle/iCkYRyUqi2Bd26YN9) to register.
   </tr>
   <tr>
     <td class="tg-0lax">04:00PM</td>
-    <td class="tg-l38z" rowspan="2">Every LLVM Pass and (Interesting) LLVM Class (Part I)<br>Nick Desaulniers</td>
+    <td class="tg-l38z" rowspan="2">Every LLVM Pass and (Interesting) LLVM Class (Part I)<br><a href="slides/nick/passes/">Slides</a><br>Nick Desaulniers</td>
   </tr>
   <tr>
     <td class="tg-0lax">04:30PM</td>
