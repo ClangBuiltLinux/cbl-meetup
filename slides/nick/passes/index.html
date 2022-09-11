@@ -17,8 +17,9 @@
     <div class="reveal">
       <div class="slides">
         <section>
+          <h3>A Random Sample of</h3>
           <h1>LLVM Passes</h1>
-          <h3>Nick Desaulniers - Sept 10/11 22</h3>
+          <h4>Nick Desaulniers - Sept 10/11 22</h4>
         </section>
         <section>
           <h3><a href="https://www.clear.rice.edu/comp512/Lectures/Papers/1971-allen-catalog.pdf">
@@ -63,6 +64,12 @@
             <li class="fragment">Passes are grouped into Pipelines.</li>
             <li class="fragment">Passes can run on LLVM IR, SDAG, or MIR.</li>
           </ul>
+        </section>
+        <section>
+          <h3>LLVM Passes</h3>
+          <p>Transform machinery is likely distinct from policy.</p>
+          <p class="fragment"><code>llvm/lib/Transform/Utils/</code> contains machinery for making changes.</p>
+          <p class="fragment"><code>llvm/lib/Transform/*/</code> contains the policy decisions in passes.</p>
         </section>
         <section>
           <h3>PassBuilder</h3>
