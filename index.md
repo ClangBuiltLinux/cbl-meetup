@@ -59,7 +59,7 @@ Please fill out [this form](https://forms.gle/iCkYRyUqi2Bd26YN9) to register.
   <tr>
     <td class="tg-0pky">10:00AM</td>
     <td class="tg-jq7l">Welcome Speech<br>Bill Wendling</td>
-    <td class="tg-jq7l" rowspan="2">Status Report: Broken Dependency Orderings in the Linux Kernel<br><span style="font-weight:300;font-style:normal">Paul Heidekrüger</span></td>
+    <td class="tg-jq7l" rowspan="2">Status Report: Broken Dependency Orderings in the Linux Kernel<br><a href="slides/paul/Broken_Dependency_Orderings_in_the_Linux_Kernel.pdf">Slides</a><span style="font-weight:300;font-style:normal">Paul Heidekrüger</span></td>
   </tr>
   <tr>
     <td class="tg-0pky">10:30AM</td>
