@@ -344,7 +344,10 @@ void baz (void) {
 .globl baz
 .type baz,@function
 foo:
+  stp x29, x30, [sp, #-16]!
+  mov x29, sp
   bl foo
+  ldp x29, x30, [sp], #16
   ret
 </code></pre>
           </div>
@@ -825,7 +828,8 @@ if (memcmp(a + 10, b + 20,
 <pre><code data-trim data-noescape class="language-c">
 // long a [100];
 // long b [100];
-if (a[10] == b[10])
+if (a[10] == b[10] &amp;&amp;
+    a[11] == b[11])
   goto foo;
 </code></pre>
           </div>
